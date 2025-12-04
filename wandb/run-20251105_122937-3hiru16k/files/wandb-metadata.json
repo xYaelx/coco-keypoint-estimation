@@ -1,0 +1,28 @@
+{
+  "os": "Windows-10-10.0.26100-SP0",
+  "python": "CPython 3.11.14",
+  "startedAt": "2025-11-05T10:29:37.134983Z",
+  "program": "c:\\Users\\beyae\\Documents\\coco-keypoint-estimation\\.vscode\\code\\train",
+  "codePath": ".vscode\\code\\train",
+  "codePathLocal": ".vscode\\code\\train",
+  "git": {
+    "remote": "https://github.com/xYaelx/coco-keypoint-estimation.git",
+    "commit": "f89faae29b82eda23d19869ede2e1c2d25897f78"
+  },
+  "email": "be.yael.10@gmail.com",
+  "root": "C:\\Users\\beyae\\Documents\\coco-keypoint-estimation",
+  "host": "Johnny",
+  "executable": "C:\\Users\\beyae\\Documents\\coco-keypoint-estimation\\.venv\\Scripts\\python.exe",
+  "cpu_count": 8,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "506333229056",
+      "used": "136466436096"
+    }
+  },
+  "memory": {
+    "total": "16890322944"
+  },
+  "writerId": "8ktro36cu3ci2hblfrrtlosw6q5w0df7"
+}

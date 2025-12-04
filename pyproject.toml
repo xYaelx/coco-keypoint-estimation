@@ -1,0 +1,15 @@
+[project]
+name = "coco-keypoint-estimation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fiftyone>=1.9.0",
+    "pip>=25.3",
+    "pycocotools>=2.0.10",
+    "torch>=2.9.0",
+    "torchaudio>=2.9.0",
+    "torchvision>=0.24.0",
+    "wandb>=0.22.3",
+]

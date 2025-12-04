@@ -1,0 +1,78 @@
+import wandb
+import torch
+from PIL import Image
+from torchvision import transforms
+import fiftyone as fo
+from torchvision.models.detection import keypointrcnn_resnet50_fpn
+from pathlib import Path
+import numpy as np
+
+labels_file = Path(r"C:\\Users\\beyae\\fiftyone\\coco-2017\\raw\\person_keypoints_val2017.json")
+dataset_file = Path(r"C:\\Users\\beyae\\fiftyone\\coco-2017\\validation") #folder
+
+TASK_TYPE = ["keypoints"] # ["detections", "segmentations", "keypoints"]
+# Load COCO dataset into FiftyOne
+dataset = fo.Dataset.from_dir(
+    dataset_type = fo.types.COCODetectionDataset,
+    label_types = TASK_TYPE,
+    dataset_dir = dataset_file,
+    labels_path = labels_file,
+    # classes=["person", "car", "truck", "traffic light"],
+    max_samples=50,
+)
+print("Loaded dataset with", len(dataset), "samples")
+
+# Load model from zoo and apply it to dataset
+model = keypointrcnn_resnet50_fpn(pretrained=True).eval()
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+])
+
+def predict_keypoints(sample):
+    image = Image.open(sample.filepath).convert("RGB")
+    image_t = transform(image)
+    with torch.no_grad():
+        outputs = model([image_t])[0]
+    keypoints_objs = []
+    for kps, score in zip(outputs["keypoints"], outputs["scores"]):
+        if score < 0.5:
+            continue
+        keypoints_objs.append(
+            [kp[:2].tolist() for kp in kps]
+        )
+    if keypoints_objs:
+        sample["predictions"] = fo.Keypoints(keypoints=keypoints_objs)
+        sample.save()
+
+for sample in dataset.select_fields():
+    predict_keypoints(sample)
+
+results = dataset.evaluate_keypoints("predictions", gt_field="ground_truth", eval_key="eval")
+print(results.metrics())
+
+session = fo.launch_app(dataset)
+session.wait()
+# run_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+# # 1. Initialize W&B
+# wandb.init(project="coco-keypoint-estimation",
+#            name=f"run_{run_name}",
+#            config={"epochs": 5, "batch_size": 16, "lr": 1e-3})
+# config = wandb.config
+
+# # 2. Example model & optimizer
+# model = models.resnet18(pretrained=False)
+# optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
+
+# wandb.watch(model, log="all")
+
+# # 3. Training loop (simplified)
+# for epoch in range(config.epochs):
+#     train_loss = 0.1 * (5 - epoch)
+#     val_acc = 0.8 + 0.02 * epoch
+
+#     wandb.log({"train_loss": train_loss, "val_acc": val_acc, "epoch": epoch})
+
+# # 4. Finish
+# wandb.finish()
