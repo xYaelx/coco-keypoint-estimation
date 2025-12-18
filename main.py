@@ -6,13 +6,21 @@ from config import (
     ROOT_DIR, USE_RAW, BATCH_SIZE, NUM_EPOCHS, LEARNING_RATE,
     IMG_SIZE, HEATMAP_SIZE, NUM_KEYPOINTS, NUM_WORKERS,
     LR_SCHEDULER_STEP_SIZE, LR_SCHEDULER_GAMMA, CHECKPOINT_DIR, MODEL_SAVE_NAME,
-    MAX_SAMPLES
+    MAX_SAMPLES, VIS_INTERVAL
 )
 from dataset import COCOKeypointDataset
 from model import KeypointEstimationModel
 from loss import KeypointMSELoss
 from train import train_epoch, validate
 from utils import create_checkpoint_dir
+
+
+def collate_fn(batch):
+    """Filter out None batches to skip images without keypoints"""
+    batch = [item for item in batch if item[0] is not None]
+    if len(batch) == 0:
+        return None
+    return torch.stack([item[0] for item in batch]), torch.stack([item[1] for item in batch])
 
 
 def main():
@@ -48,14 +56,16 @@ def main():
         train_dataset,
         batch_size=BATCH_SIZE,
         shuffle=True,
-        num_workers=NUM_WORKERS
+        num_workers=NUM_WORKERS,
+        collate_fn=collate_fn
     )
     
     val_loader = DataLoader(
         val_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
-        num_workers=NUM_WORKERS
+        num_workers=NUM_WORKERS,
+        collate_fn=collate_fn
     )
     
     # Initialize model
@@ -78,8 +88,9 @@ def main():
         # Train
         train_loss = train_epoch(model, train_loader, criterion, optimizer, device)
         
-        # Validate
-        val_loss = validate(model, val_loader, criterion, device)
+        # Validate and visualize every VIS_INTERVAL epochs
+        should_visualize = (epoch + 1) % VIS_INTERVAL == 0
+        val_loss = validate(model, val_loader, criterion, device, epoch=epoch, save_vis=should_visualize)
         
         # Update learning rate
         scheduler.step()
